@@ -1,0 +1,12 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Archives and logs
+*.rar
+*.zip
+*.log

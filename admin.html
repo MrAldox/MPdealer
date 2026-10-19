@@ -1,0 +1,802 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INVERLUMA | Panel de Administración</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #09090f; --dark: #0f0f1a; --card: #14141f; --border: #22223a;
+      --text: #F0F0F8; --muted: #7878a0; --blue: #1B3A8C; --blue-l: #2952c8;
+      --blue-b: #4a90e2; --red: #CC1E2E; --green: #25D366; --white: #FFFFFF;
+      --yellow: #f5c518; --orange: #e87c1e;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
+
+    /* HEADER */
+    .header { background: var(--dark); border-bottom: 1px solid var(--border); padding: 0 28px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .header-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: var(--white); letter-spacing: 1px; }
+    .header-logo span { color: var(--red); }
+    .header-logo em { font-style: normal; color: var(--muted); font-size: 13px; margin-left: 6px; }
+    .header-badge { background: rgba(232,33,58,0.15); border: 1px solid rgba(232,33,58,0.4); color: var(--red); font-size: 11px; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+
+    /* LAYOUT */
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 64px); }
+
+    /* SIDEBAR */
+    .sidebar { background: var(--dark); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 6px; }
+    .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 12px 12px 6px; }
+    .nav-btn { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; border: none; background: none; color: var(--muted); font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer; text-align: left; width: 100%; transition: all 0.2s; }
+    .nav-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .nav-btn.active { background: rgba(27,58,140,0.2); color: var(--blue-b); border: 1px solid rgba(27,58,140,0.3); }
+    .nav-btn svg { flex-shrink: 0; }
+    .sidebar-stats { margin-top: auto; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+    .stat-item:last-child { border-bottom: none; }
+    .stat-item strong { color: var(--text); font-size: 15px; }
+
+    /* MAIN */
+    .main { padding: 28px; overflow-y: auto; }
+
+    /* VIEWS */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* PAGE HEADER */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+    .page-title { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 800; color: var(--white); }
+    .page-title small { display: block; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: var(--blue-l); }
+    .btn-red { background: var(--red); color: white; }
+    .btn-red:hover { background: #a01525; }
+    .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+    .btn-green { background: var(--green); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* SEARCH + FILTER BAR */
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-input { flex: 1; min-width: 200px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--blue-b); }
+    .search-input::placeholder { color: var(--muted); }
+    .filter-select { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; cursor: pointer; outline: none; }
+
+    /* VEHICLE LIST */
+    .vehicle-list { display: flex; flex-direction: column; gap: 12px; }
+    .vehicle-row { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
+    .vehicle-row:hover { border-color: var(--blue); }
+    .vehicle-thumb { width: 80px; height: 56px; object-fit: cover; border-radius: 6px; background: var(--dark); flex-shrink: 0; }
+    .vehicle-info { flex: 1; min-width: 0; }
+    .vehicle-name { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); }
+    .vehicle-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .meta-tag { font-size: 11px; color: var(--muted); background: var(--dark); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+    .vehicle-price { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: var(--red); white-space: nowrap; }
+    .vehicle-actions { display: flex; gap: 8px; }
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .status-disponible { background: rgba(37,211,102,0.15); color: var(--green); border: 1px solid rgba(37,211,102,0.3); }
+    .status-vendido { background: rgba(232,33,58,0.15); color: var(--red); border: 1px solid rgba(232,33,58,0.3); }
+    .status-reservado { background: rgba(245,197,24,0.15); color: var(--yellow); border: 1px solid rgba(245,197,24,0.3); }
+
+    /* FORM */
+    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; max-width: 860px; }
+    .form-section { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px; color: var(--blue-b); margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+    .form-input, .form-select, .form-textarea { background: var(--dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue-b); }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
+    .form-textarea { resize: vertical; min-height: 100px; }
+    .form-actions { display: flex; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+    /* FOTOS */
+    .photos-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .photo-item { position: relative; width: 100px; height: 75px; }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 2px solid var(--border); }
+    .photo-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; background: var(--red); border-radius: 50%; border: none; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .photo-add { width: 100px; height: 75px; border: 2px dashed var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 11px; gap: 4px; transition: border-color 0.2s; background: none; }
+    .photo-add:hover { border-color: var(--blue-b); color: var(--blue-b); }
+    .url-input-row { display: flex; gap: 8px; margin-top: 8px; }
+    .url-input-row input { flex: 1; }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty svg { opacity: 0.3; margin-bottom: 16px; }
+    .empty h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; color: var(--text); margin-bottom: 8px; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--green); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideIn 0.3s ease; pointer-events: none; }
+    .toast.error { background: var(--red); }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* MODAL CONFIRM */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; }
+    .dialog { background: var(--dark); border: 1px solid var(--border); border-radius: 12px; padding: 28px; max-width: 420px; width: 100%; }
+    .dialog h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+    .dialog p { color: var(--muted); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+    .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* EXPORT SECTION */
+    .export-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+    .export-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+    .export-desc { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+    code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; color: var(--blue-b); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } .form-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">INVER<span>LUMA</span> <em>Admin</em></div>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <span id="headerStats" style="font-size:13px;color:var(--muted);"></span>
+    <span class="header-badge">Panel Privado</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <span class="sidebar-section">Gestión</span>
+    <button class="nav-btn active" onclick="showView('list')" id="nav-list">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Catálogo
+    </button>
+    <button class="nav-btn" onclick="showView('add')" id="nav-add">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Agregar Vehículo
+    </button>
+
+    <span class="sidebar-section">Herramientas</span>
+    <button class="nav-btn" onclick="showView('export')" id="nav-export">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar / Sincronizar
+    </button>
+    <a href="inverluma_ajustado.html" target="_blank" class="nav-btn" style="text-decoration:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Ver Web Pública
+    </a>
+
+    <div class="sidebar-stats" id="sidebarStats">
+      <div class="stat-item"><span>Total</span><strong id="statTotal">0</strong></div>
+      <div class="stat-item"><span>Disponibles</span><strong id="statDisp">0</strong></div>
+      <div class="stat-item"><span>Vendidos</span><strong id="statVend">0</strong></div>
+      <div class="stat-item"><span>Reservados</span><strong id="statRes">0</strong></div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ===== VISTA: CATÁLOGO ===== -->
+    <div class="view active" id="view-list">
+      <div class="page-header">
+        <div class="page-title">
+          Catálogo de Vehículos
+          <small>Gestiona todos los vehículos de INVERLUMA</small>
+        </div>
+        <button class="btn btn-primary" onclick="showView('add')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar Vehículo
+        </button>
+      </div>
+
+      <div class="filter-bar">
+        <input class="search-input" id="listSearch" placeholder="Buscar por marca, modelo, año..." oninput="renderList()" />
+        <select class="filter-select" id="listTipo" onchange="renderList()">
+          <option value="">Todos los tipos</option>
+          <option value="sedan">Sedán</option>
+          <option value="suv">SUV</option>
+          <option value="pickup">Pickup</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="van">Van</option>
+        </select>
+        <select class="filter-select" id="listStatus" onchange="renderList()">
+          <option value="">Todos los estados</option>
+          <option value="disponible">Disponible</option>
+          <option value="vendido">Vendido</option>
+          <option value="reservado">Reservado</option>
+        </select>
+      </div>
+
+      <div class="vehicle-list" id="vehicleList"></div>
+    </div>
+
+    <!-- ===== VISTA: AGREGAR / EDITAR ===== -->
+    <div class="view" id="view-add">
+      <div class="page-header">
+        <div class="page-title" id="formTitle">
+          Agregar Vehículo
+          <small>Completa el formulario para publicar un auto</small>
+        </div>
+        <button class="btn btn-ghost" onclick="showView('list')">← Volver al catálogo</button>
+      </div>
+
+      <div class="form-card">
+        <input type="hidden" id="editId" value="" />
+
+        <div class="form-section">Información básica</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Marca *</label>
+            <input class="form-input" id="fMarca" placeholder="Toyota, Honda, Ford..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modelo *</label>
+            <input class="form-input" id="fModelo" placeholder="Corolla, Civic, F-150..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Año *</label>
+            <input class="form-input" id="fAnio" type="number" placeholder="2022" min="1990" max="2030" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Precio (RD$) *</label>
+            <input class="form-input" id="fPrecio" type="number" placeholder="1500000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo *</label>
+            <select class="form-select" id="fTipo">
+              <option value="sedan">Sedán</option>
+              <option value="suv">SUV</option>
+              <option value="pickup">Pickup</option>
+              <option value="hatchback">Hatchback</option>
+              <option value="van">Van</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Condición *</label>
+            <select class="form-select" id="fCondicion">
+              <option value="usado">Usado</option>
+              <option value="nuevo">Nuevo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado *</label>
+            <select class="form-select" id="fEstado">
+              <option value="disponible">Disponible</option>
+              <option value="reservado">Reservado</option>
+              <option value="vendido">Vendido</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kilometraje</label>
+            <input class="form-input" id="fKm" type="number" placeholder="35000" />
+          </div>
+        </div>
+
+        <div class="form-section">Especificaciones técnicas</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Motor</label>
+            <input class="form-input" id="fMotor" placeholder="2.0L, 1.5L Turbo..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Transmisión</label>
+            <select class="form-select" id="fTransmision">
+              <option value="automatica">Automática</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Combustible</label>
+            <select class="form-select" id="fCombustible">
+              <option value="gasolina">Gasolina</option>
+              <option value="diesel">Diésel</option>
+              <option value="hibrido">Híbrido</option>
+              <option value="electrico">Eléctrico</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Color</label>
+            <input class="form-input" id="fColor" placeholder="Blanco Perla, Negro..." />
+          </div>
+        </div>
+
+        <div class="form-section">Descripción</div>
+        <div class="form-group full">
+          <label class="form-label">Descripción del vehículo</label>
+          <textarea class="form-textarea" id="fDesc" placeholder="Describe las características, equipamiento, estado, extras del vehículo..."></textarea>
+        </div>
+
+        <div class="form-section">Fotos del vehículo</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+          Puedes subir las fotos directamente desde la computadora del equipo local o agregar una URL.
+          Las imágenes seleccionadas se guardan junto con el vehículo en este navegador.
+        </p>
+        <div class="photos-grid" id="photosGrid"></div>
+        <div class="url-input-row">
+          <input class="form-input" id="urlInput" placeholder="https://... (URL de la foto)" />
+          <button class="btn btn-ghost" onclick="addPhotoUrl()">Agregar URL</button>
+        </div>
+        <div style="margin-top:10px;">
+          <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;" onchange="addLocalPhotos(event)" />
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('photoFileInput').click()">
+            📷 Subir imágenes desde este equipo
+          </button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">
+          💡 Puedes seleccionar varias imágenes a la vez. Se recomienda usar fotos JPG/PNG comprimidas para no hacer demasiado grande el catálogo exportado.
+        </p>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveVehicle()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span id="saveBtn">Guardar Vehículo</span>
+          </button>
+          <button class="btn btn-ghost" onclick="clearForm()">Limpiar formulario</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== VISTA: EXPORTAR ===== -->
+    <div class="view" id="view-export">
+      <div class="page-header">
+        <div class="page-title">
+          Exportar y Sincronizar
+          <small>Conecta el admin con la web pública</small>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-title">📋 Cómo funciona la sincronización</div>
+        <div class="export-desc">
+          El admin guarda los vehículos en el navegador (<code>localStorage</code>). Para llevarlos a la web pública, exporta el catálogo y pégalo en el archivo <code>inverluma_ajustado.html</code>.
+        </div>
+        <button class="btn btn-primary" onclick="exportCatalog()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar catálogo (JSON)
+        </button>
+      </div>
+
+      <div class="export-card">
+        <div class="export-title">📥 Importar catálogo</div>
+        <div class="export-desc">¿Ya tienes un catálogo guardado? Importa el JSON para cargarlo aquí.</div>
+        <div class="url-input-row">
+          <textarea class="form-textarea" id="importJson" placeholder='Pega aquí el JSON del catálogo...' style="min-height:80px;flex:1;"></textarea>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:10px;" onclick="importCatalog()">Importar JSON</button>
+      </div>
+
+      <div class="export-card">
+        <div class="export-title">📱 Código de catálogo para la web</div>
+        <div class="export-desc">
+          Copia este bloque y reemplaza el array <code>const vehiculos = [...]</code> en tu archivo <code>inverluma_ajustado.html</code>:
+        </div>
+        <textarea class="form-textarea" id="codeOutput" style="min-height:200px;font-family:monospace;font-size:12px;background:#000;color:#4a90e2;" readonly placeholder="Haz clic en 'Generar código' para obtener el bloque listo para copiar..."></textarea>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="generateCode()">Generar código</button>
+        <button class="btn btn-ghost" style="margin-top:12px;" onclick="copyCode()">Copiar código</button>
+      </div>
+
+      <div class="export-card">
+        <div class="export-title">🗑️ Zona de peligro</div>
+        <div class="export-desc">Borra todos los vehículos del admin. Esta acción no se puede deshacer.</div>
+        <button class="btn btn-red" onclick="confirmClearAll()">Borrar todo el catálogo</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog">
+    <h3 id="confirmTitle">Confirmar acción</h3>
+    <p id="confirmMsg">¿Estás seguro?</p>
+    <div class="dialog-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn btn-red" id="confirmOk" onclick="">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================
+// STORAGE
+// ==================
+const STORAGE_KEY = 'inverluma_catalogo';
+
+function loadVehiculos() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : getDefaultVehiculos();
+  } catch { return getDefaultVehiculos(); }
+}
+
+function saveVehiculos(lista) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+  updateStats();
+}
+
+function getDefaultVehiculos() {
+  return [
+    { id:1, marca:"Toyota", modelo:"Corolla", anio:2022, tipo:"sedan", condicion:"usado", precio:1450000, km:28000, transmision:"automatica", combustible:"gasolina", color:"Blanco Perla", motor:"1.8L", descripcion:"Toyota Corolla en excelentes condiciones. Un dueño, mantenimiento al día.", fotos:["https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=80"], estado:"disponible" },
+    { id:2, marca:"Toyota", modelo:"RAV4", anio:2021, tipo:"suv", condicion:"usado", precio:2100000, km:41000, transmision:"automatica", combustible:"gasolina", color:"Gris Metálico", motor:"2.5L", descripcion:"RAV4 Adventure con tracción 4x4. Techo panorámico, Apple CarPlay.", fotos:["https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80"], estado:"disponible" },
+    { id:3, marca:"Honda", modelo:"Civic", anio:2023, tipo:"sedan", condicion:"nuevo", precio:1850000, km:4200, transmision:"automatica", combustible:"gasolina", color:"Azul Sonic", motor:"1.5L Turbo", descripcion:"Honda Civic Sport 2023. Garantía de fábrica vigente.", fotos:["https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80"], estado:"disponible" },
+  ];
+}
+
+let vehiculos = loadVehiculos();
+let fotos_temp = [];
+let editandoId = null;
+let confirmCallback = null;
+
+// ==================
+// STATS
+// ==================
+function updateStats() {
+  const total = vehiculos.length;
+  const disp = vehiculos.filter(v => v.estado === 'disponible').length;
+  const vend = vehiculos.filter(v => v.estado === 'vendido').length;
+  const res  = vehiculos.filter(v => v.estado === 'reservado').length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDisp').textContent  = disp;
+  document.getElementById('statVend').textContent  = vend;
+  document.getElementById('statRes').textContent   = res;
+  document.getElementById('headerStats').textContent = `${total} vehículos · ${disp} disponibles`;
+}
+
+// ==================
+// NAVEGACIÓN
+// ==================
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+
+  if (name === 'list') renderList();
+  if (name === 'add' && editandoId === null) clearForm();
+}
+
+// ==================
+// LISTA
+// ==================
+function renderList() {
+  const search = (document.getElementById('listSearch').value || '').toLowerCase();
+  const tipo   = document.getElementById('listTipo').value;
+  const status = document.getElementById('listStatus').value;
+
+  let lista = vehiculos.filter(v => {
+    const matchSearch = !search || `${v.marca} ${v.modelo} ${v.anio} ${v.color}`.toLowerCase().includes(search);
+    const matchTipo   = !tipo || v.tipo === tipo;
+    const matchStatus = !status || v.estado === status;
+    return matchSearch && matchTipo && matchStatus;
+  });
+
+  const container = document.getElementById('vehicleList');
+
+  if (lista.length === 0) {
+    container.innerHTML = `<div class="empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><h3>Sin resultados</h3><p>No hay vehículos que coincidan con los filtros.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = lista.map(v => {
+    const statusClass = `status-${v.estado || 'disponible'}`;
+    const statusLabel = { disponible: 'Disponible', vendido: 'Vendido', reservado: 'Reservado' }[v.estado] || 'Disponible';
+    const foto = v.fotos && v.fotos.length > 0 ? v.fotos[0] : 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200&q=60';
+    return `
+      <div class="vehicle-row">
+        <img class="vehicle-thumb" src="${foto}" alt="${v.marca}" onerror="this.src='https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200&q=60'" />
+        <div class="vehicle-info">
+          <div class="vehicle-name">${v.anio} ${v.marca} ${v.modelo}</div>
+          <div class="vehicle-meta">
+            <span class="meta-tag">${v.km ? formatKm(v.km) : '—'}</span>
+            <span class="meta-tag">${capitalize(v.transmision || '')}</span>
+            <span class="meta-tag">${capitalize(v.combustible || '')}</span>
+            <span class="meta-tag">${v.motor || '—'}</span>
+            <span class="meta-tag">${capitalize(v.condicion || '')}</span>
+          </div>
+        </div>
+        <span class="status-badge ${statusClass}">${statusLabel}</span>
+        <div class="vehicle-price">RD$${v.precio ? v.precio.toLocaleString('es-DO') : '—'}</div>
+        <div class="vehicle-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editVehicle(${v.id})">✏️ Editar</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete(${v.id})">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ==================
+// FORMULARIO
+// ==================
+function clearForm() {
+  editandoId = null;
+  fotos_temp = [];
+  document.getElementById('editId').value = '';
+  document.getElementById('formTitle').innerHTML = 'Agregar Vehículo<small>Completa el formulario para publicar un auto</small>';
+  document.getElementById('saveBtn').textContent = 'Guardar Vehículo';
+  ['fMarca','fModelo','fAnio','fPrecio','fKm','fMotor','fColor','fDesc','urlInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['fTipo','fCondicion','fEstado','fTransmision','fCombustible'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
+  });
+  const fileInput = document.getElementById('photoFileInput');
+  if (fileInput) fileInput.value = '';
+  renderPhotos();
+}
+
+function editVehicle(id) {
+  const v = vehiculos.find(x => x.id === id);
+  if (!v) return;
+  editandoId = id;
+  fotos_temp = [...(v.fotos || [])];
+
+  document.getElementById('editId').value = id;
+  document.getElementById('formTitle').innerHTML = `Editar Vehículo<small>${v.año || v.anio} ${v.marca} ${v.modelo}</small>`;
+  document.getElementById('saveBtn').textContent = 'Guardar Cambios';
+  document.getElementById('fMarca').value = v.marca || '';
+  document.getElementById('fModelo').value = v.modelo || '';
+  document.getElementById('fAnio').value = v.año || v.anio || '';
+  document.getElementById('fPrecio').value = v.precio || '';
+  document.getElementById('fKm').value = v.km || '';
+  document.getElementById('fMotor').value = v.motor || '';
+  document.getElementById('fColor').value = v.color || '';
+  document.getElementById('fDesc').value = v.descripcion || '';
+  document.getElementById('fTipo').value = v.tipo || 'sedan';
+  document.getElementById('fCondicion').value = v.condicion || 'usado';
+  document.getElementById('fEstado').value = v.estado || 'disponible';
+  document.getElementById('fTransmision').value = v.transmision || 'automatica';
+  document.getElementById('fCombustible').value = v.combustible || 'gasolina';
+
+  renderPhotos();
+  showView('add');
+  document.getElementById('nav-add').classList.remove('active');
+}
+
+function saveVehicle() {
+  const marca = document.getElementById('fMarca').value.trim();
+  const modelo = document.getElementById('fModelo').value.trim();
+  const anio = parseInt(document.getElementById('fAnio').value);
+  const precio = parseInt(document.getElementById('fPrecio').value);
+
+  if (!marca || !modelo || !anio || !precio) {
+    toast('Completa los campos obligatorios (Marca, Modelo, Año, Precio)', true);
+    return;
+  }
+
+  const v = {
+    id: editandoId || Date.now(),
+    marca, modelo,
+    año: anio, anio,
+    tipo: document.getElementById('fTipo').value,
+    condicion: document.getElementById('fCondicion').value,
+    estado: document.getElementById('fEstado').value,
+    precio,
+    km: parseInt(document.getElementById('fKm').value) || 0,
+    motor: document.getElementById('fMotor').value.trim(),
+    transmision: document.getElementById('fTransmision').value,
+    combustible: document.getElementById('fCombustible').value,
+    color: document.getElementById('fColor').value.trim(),
+    descripcion: document.getElementById('fDesc').value.trim(),
+    fotos: [...fotos_temp],
+  };
+
+  if (editandoId) {
+    const idx = vehiculos.findIndex(x => x.id === editandoId);
+    if (idx !== -1) vehiculos[idx] = v;
+    toast('Vehículo actualizado correctamente ✓');
+  } else {
+    vehiculos.unshift(v);
+    toast('Vehículo agregado al catálogo ✓');
+  }
+
+  saveVehiculos(vehiculos);
+  clearForm();
+  showView('list');
+}
+
+// ==================
+// FOTOS
+// ==================
+function addPhotoUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { toast('Ingresa una URL válida', true); return; }
+  fotos_temp.push(url);
+  document.getElementById('urlInput').value = '';
+  renderPhotos();
+}
+
+function addLocalPhotos(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+
+  const imageFiles = files.filter(file => file.type.startsWith('image/'));
+  if (!imageFiles.length) {
+    toast('Selecciona archivos de imagen válidos', true);
+    return;
+  }
+
+  let pendientes = imageFiles.length;
+
+  imageFiles.forEach(file => {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      fotos_temp.push(e.target.result);
+      pendientes--;
+
+      if (pendientes === 0) {
+        renderPhotos();
+        toast(`${imageFiles.length} imagen${imageFiles.length > 1 ? 'es' : ''} agregada${imageFiles.length > 1 ? 's' : ''} ✓`);
+      }
+    };
+
+    reader.onerror = () => {
+      pendientes--;
+      if (pendientes === 0) renderPhotos();
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  event.target.value = '';
+}
+
+function removePhoto(idx) {
+  fotos_temp.splice(idx, 1);
+  renderPhotos();
+}
+
+function renderPhotos() {
+  const grid = document.getElementById('photosGrid');
+  grid.innerHTML = fotos_temp.map((url, i) => `
+    <div class="photo-item">
+      <img src="${url}" onerror="this.src='https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200&q=60'" />
+      <button class="photo-remove" onclick="removePhoto(${i})">×</button>
+    </div>`).join('') +
+    `<button class="photo-add" onclick="document.getElementById('urlInput').focus()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Agregar</span>
+    </button>`;
+}
+
+// ==================
+// ELIMINAR
+// ==================
+function confirmDelete(id) {
+  const v = vehiculos.find(x => x.id === id);
+  showConfirm(
+    'Eliminar vehículo',
+    `¿Eliminar el ${v.año || v.anio} ${v.marca} ${v.modelo}? Esta acción no se puede deshacer.`,
+    () => { deleteVehicle(id); }
+  );
+}
+
+function deleteVehicle(id) {
+  vehiculos = vehiculos.filter(x => x.id !== id);
+  saveVehiculos(vehiculos);
+  renderList();
+  toast('Vehículo eliminado');
+}
+
+function confirmClearAll() {
+  showConfirm('Borrar TODO el catálogo', '¿Seguro que quieres borrar todos los vehículos? Esto no se puede deshacer.', () => {
+    vehiculos = [];
+    saveVehiculos(vehiculos);
+    renderList();
+    toast('Catálogo borrado');
+  });
+}
+
+// ==================
+// EXPORT / IMPORT
+// ==================
+function exportCatalog() {
+  const json = JSON.stringify(vehiculos, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'inverluma-catalogo.json';
+  a.click();
+  toast('Catálogo exportado ✓');
+}
+
+function importCatalog() {
+  const txt = document.getElementById('importJson').value.trim();
+  if (!txt) { toast('Pega el JSON primero', true); return; }
+  try {
+    const data = JSON.parse(txt);
+    if (!Array.isArray(data)) { toast('El JSON debe ser un array', true); return; }
+    vehiculos = data;
+    saveVehiculos(vehiculos);
+    document.getElementById('importJson').value = '';
+    renderList();
+    toast(`Importados ${vehiculos.length} vehículos ✓`);
+  } catch { toast('JSON inválido', true); }
+}
+
+function generateCode() {
+  const code = `const vehiculos = ${JSON.stringify(vehiculos.map(v => ({
+    id: v.id,
+    marca: v.marca,
+    modelo: v.modelo,
+    año: v.año || v.anio,
+    tipo: v.tipo,
+    condicion: v.condicion,
+    precio: v.precio,
+    km: v.km,
+    transmision: v.transmision,
+    combustible: v.combustible,
+    color: v.color,
+    motor: v.motor,
+    descripcion: v.descripcion,
+    fotos: v.fotos,
+  })), null, 2)};`;
+  document.getElementById('codeOutput').value = code;
+  toast('Código generado — ahora cópialo ✓');
+}
+
+function copyCode() {
+  const code = document.getElementById('codeOutput').value;
+  if (!code) { toast('Primero genera el código', true); return; }
+  navigator.clipboard.writeText(code).then(() => toast('Código copiado al portapapeles ✓'));
+}
+
+// ==================
+// CONFIRM DIALOG
+// ==================
+function showConfirm(title, msg, cb) {
+  confirmCallback = cb;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmOk').onclick = () => { closeConfirm(); if (confirmCallback) confirmCallback(); };
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+
+// ==================
+// TOAST
+// ==================
+function toast(msg, isError = false) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ==================
+// UTILS
+// ==================
+function formatKm(n) {
+  if (!n) return '0 km';
+  if (n < 1000) return n + ' km';
+  return n.toLocaleString('es-DO') + ' km';
+}
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ==================
+// INIT
+// ==================
+document.addEventListener('DOMContentLoaded', () => {
+  updateStats();
+  renderList();
+  renderPhotos();
+});
+</script>
+</body>
+</html>
